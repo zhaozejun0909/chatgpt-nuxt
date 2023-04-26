@@ -1,5 +1,5 @@
 <template>
-  <div class="relative m-4 mt-3 sm:mb-2 pointer-events-auto">
+  <div class="relative m-4 mt-3 sm:mb-2 pointer-events-auto" :style="{ marginBottom: 'calc(env(safe-area-inset-bottom))' }">
     <textarea
       class="w-full max-h-60 p-1.5 pl-3 pr-10 resize-none border rounded-lg outline-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-40"
       rows="3"
@@ -90,4 +90,6 @@ function enterInput(event: KeyboardEvent) {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+
+</style>

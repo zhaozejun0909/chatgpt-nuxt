@@ -8,6 +8,10 @@ export default defineNuxtConfig({
           name: "description",
           content: "基于 OpenAI 的 ChatGPT 自然语言模型人工智能对话",
         },
+        {
+          name: 'viewport',
+          content: 'initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width,viewport-fit=cover',
+        },
       ],
     },
   },
