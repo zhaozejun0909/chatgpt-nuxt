@@ -16,15 +16,21 @@
 import { useChatStore } from "@/stores/chat";
 import { ApiRequest } from "@/types";
 import hotkeys from "hotkeys-js";
+import { useRouter, useRoute } from 'vue-router'
 
 const store = useChatStore();
 
 // 页面初始化
+const router = useRoute()
 
 onMounted(() => initPage());
 
 async function initPage() {
-  if (!loadSetting()) store.showSetting = true;
+  const manualSetting = router.query.manualSetting as string
+  if (manualSetting) {
+    localStorage.setItem('manualSetting', manualSetting)
+  }
+  if (manualSetting && !loadSetting()) store.showSetting = true;
   await store.setNotActiveDbMessages();
   await store.getAllChats();
 }

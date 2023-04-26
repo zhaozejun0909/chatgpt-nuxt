@@ -151,11 +151,14 @@ export const useChatStore = defineStore("chat", () => {
 
     if (!chatId) return;
 
-    const setting = loadSetting();
-    if (!setting) {
+    let setting = loadSetting();
+    const manualSetting = localStorage.getItem('manualSetting')
+    if (!setting && manualSetting) {
       showSetting.value = true;
       return;
     }
+
+    setting = setting || { apiKey: '', temperature: 0.7 };
 
     // 开始对话
     clearSendMessageContent();

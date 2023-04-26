@@ -47,7 +47,10 @@ export default defineEventHandler(async (event) => {
 async function hiOpenAPI(body: ApiRequest) {
   const { cipherAPIKey, model, request } = body;
 
-  const apiKey = aesCrypto({ message: cipherAPIKey, type: "de" });
+  let apiKey = aesCrypto({ message: cipherAPIKey, type: "de" });
+  if (!apiKey) apiKey = process.env.VERCEL_AI_KEY as string
+// const apiKey = process.env.VERCEL_AI_KEY
+
   const openai = new OpenAIApi(new Configuration({ apiKey }));
 
   const requestConfig: AxiosRequestConfig = {

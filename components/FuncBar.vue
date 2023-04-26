@@ -19,8 +19,8 @@ import { useChatStore } from "@/stores/chat";
 const store = useChatStore();
 const funcs = [
   { name: "新建聊天", type: "chat", icon: Plus },
-  { name: "设置", type: "setting", icon: Setting },
-  { name: "查看项目", type: "github", icon: Github },
+  // { name: "设置", type: "setting", icon: Setting },
+  // { name: "查看项目", type: "github", icon: Github },
 ];
 
 async function clickBtn(type: string) {

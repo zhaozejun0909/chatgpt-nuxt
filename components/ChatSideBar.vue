@@ -3,8 +3,8 @@
     class="hidden sm:flex flex-col sm:visible max-w-[1/5] sm:w-1/5 overflow-hidden p-3 bg-slate-100 select-none"
   >
     <LogoBar />
-    <ChatList />
     <FuncBar />
+    <ChatList />
   </div>
 </template>
 
