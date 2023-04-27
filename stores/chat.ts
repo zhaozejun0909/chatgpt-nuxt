@@ -198,12 +198,13 @@ export const useChatStore = defineStore("chat", () => {
       // 读取 Stream
       let content = "";
       const reader = body?.getReader();
-
+      let lastUnFinishLine = "" // 接收流数据过程中，结尾会出现不完整的问答数据，用此字段保存最后一行，在下次循环的时候拼接上去
       while (reader) {
         const { value } = await reader.read();
 
-        const text = decoder.decode(value);
-        console.log(text, status, '============')
+        const text = decoder.decode(value) + lastUnFinishLine;
+        console.log(text, status, lastUnFinishLine, '============')
+        lastUnFinishLine = ""
         // 处理服务端返回的异常消息并终止读取
         if (status !== 200) {
           const error = JSON.parse(text);
@@ -217,10 +218,14 @@ export const useChatStore = defineStore("chat", () => {
           if (line.length === 0) continue;
           if (line.startsWith(":")) continue;
           if (line === "data: [DONE]") return;
-
-          const data = JSON.parse(line.substring(6));
-          content += data.choices[0].delta.content ?? "";
-          await updateMessageContent(assistantMessageId, content);
+          if (text.endsWith(line) && !line.endsWith("}]}")) {
+            // 结尾会出现不完整的问答数据，用此字段保存最后一行，在下次循环的时候拼接上去
+            lastUnFinishLine = line
+          } else {
+            const data = JSON.parse(line.substring(6));
+            content += data.choices[0].delta.content ?? "";
+            await updateMessageContent(assistantMessageId, content);
+          }
         }
       }
     } catch (e: any) {
