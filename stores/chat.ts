@@ -203,14 +203,17 @@ export const useChatStore = defineStore("chat", () => {
         const { value } = await reader.read();
 
         const text = lastUnFinishLine + decoder.decode(value);
-        console.log(text, status, lastUnFinishLine, '============')
+        // console.log(text, status, lastUnFinishLine, '============')
         lastUnFinishLine = ""
         // 处理服务端返回的异常消息并终止读取
         if (status !== 200) {
-          const error = JSON.parse(text);
-          content += error.error?.message ?? error.message;
-          console.log('status: ' + status)
-          return await makeErrorMessage(assistantMessageId, content);
+          try {
+            const error = JSON.parse(text);
+            content += error.error?.message ?? error.message;
+            return await makeErrorMessage(assistantMessageId, content);  
+          } catch (error) {
+            return await makeErrorMessage(assistantMessageId, "request failed or timeout, try again please.");
+          }
         }
 
         // 读取正文
