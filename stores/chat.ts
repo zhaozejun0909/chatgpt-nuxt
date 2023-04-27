@@ -203,11 +203,12 @@ export const useChatStore = defineStore("chat", () => {
         const { value } = await reader.read();
 
         const text = decoder.decode(value);
-
+        console.log(text, status, '============')
         // 处理服务端返回的异常消息并终止读取
         if (status !== 200) {
           const error = JSON.parse(text);
           content += error.error?.message ?? error.message;
+          console.log('status: ' + status)
           return await makeErrorMessage(assistantMessageId, content);
         }
 
