@@ -202,7 +202,7 @@ export const useChatStore = defineStore("chat", () => {
       while (reader) {
         const { value } = await reader.read();
 
-        const text = decoder.decode(value) + lastUnFinishLine;
+        const text = lastUnFinishLine + decoder.decode(value);
         console.log(text, status, lastUnFinishLine, '============')
         lastUnFinishLine = ""
         // 处理服务端返回的异常消息并终止读取
