@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     console.log('请求入参：\n', body)
     const complete = await hiOpenAPI(body);
     setResStatus(event, complete.status, complete.statusText);
-    console.log('请求结果：\n', complete.data)
+    // console.log('请求结果：\n', complete.data)
     return complete.data;
   } catch (e: any) {
     // 很奇怪，在我的 mac 开发环境中报错时，response 永远是一个 Stream 对象
