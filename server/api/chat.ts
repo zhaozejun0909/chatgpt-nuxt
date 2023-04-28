@@ -12,7 +12,7 @@ import { ApiRequest } from "@/types";
 export default defineEventHandler(async (event) => {
   try {
     const body = (await readBody(event)) as ApiRequest;
-    console.log('请求入参：\n', body)
+    console.log('请求入参：\n', JSON.stringify(body))
     const complete = await hiOpenAPI(body);
     setResStatus(event, complete.status, complete.statusText);
     // console.log('请求结果：\n', complete.data)
