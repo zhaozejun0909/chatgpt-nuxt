@@ -2,11 +2,11 @@
 export default defineNuxtConfig({
   app: {
     head: {
-      title: "ChatGPT",
+      title: "ChatGPT代理",
       meta: [
         {
           name: "description",
-          content: "基于 OpenAI 的 ChatGPT 自然语言模型人工智能对话",
+          content: "基于 OpenAI 的 gpt-3.5-turbo 和 DALL·E 模型，仅用于体验和测试",
         },
         {
           name: 'viewport',
