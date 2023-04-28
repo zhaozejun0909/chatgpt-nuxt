@@ -10,11 +10,13 @@ import { AxiosRequestConfig } from "axios";
 import { ApiRequest } from "@/types";
 
 export default defineEventHandler(async (event) => {
+  console.log('get a request --- byyyyyy zzj')
   try {
     const body = (await readBody(event)) as ApiRequest;
     const complete = await hiOpenAPI(body);
 
     setResStatus(event, complete.status, complete.statusText);
+    console.log('get a response --- byyyyyy zzj')
     return complete.data;
   } catch (e: any) {
     // 很奇怪，在我的 mac 开发环境中报错时，response 永远是一个 Stream 对象
@@ -47,7 +49,8 @@ export default defineEventHandler(async (event) => {
 async function hiOpenAPI(body: ApiRequest) {
   const { cipherAPIKey, model, request } = body;
 
-  let apiKey = aesCrypto({ message: cipherAPIKey, type: "de" });
+  let apiKey = ''
+  if (cipherAPIKey) apiKey = aesCrypto({ message: cipherAPIKey, type: "de" });
   if (!apiKey) apiKey = process.env.VERCEL_AI_KEY as string
 // const apiKey = process.env.VERCEL_AI_KEY
 
