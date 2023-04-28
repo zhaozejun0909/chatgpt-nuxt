@@ -5,11 +5,15 @@
       rows="3"
       ref="textareaDom"
       v-model="store.messageContent"
-      :placeholder="placeholder"
+      :placeholder="store.chatImgModel ? '现在是图片生成模式，请输入图片描述' : '输入消息，Enter 发送，Shift + Enter 换行'"
       @keydown="(event) => enterInput(event)"
       @compositionstart="composing = true"
       @compositionend="composing = false"
     ></textarea>
+    <ChatPicButton
+      class="absolute top-2 sm:top-2 right-3"
+      @click="chatImageAction"
+    />
     <ChatSendButton
       class="absolute bottom-2 sm:bottom-2 right-3"
       :is-talking="store.talking"
@@ -50,6 +54,10 @@ async function sendMessage() {
     content: store.messageContent,
     chatId: store.chat?.id,
   });
+}
+
+function chatImageAction() {
+  store.chatImgModel = !store.chatImgModel
 }
 
 function enterInput(event: KeyboardEvent) {

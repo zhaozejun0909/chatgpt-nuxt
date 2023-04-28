@@ -22,6 +22,8 @@ export const useChatStore = defineStore("chat", () => {
   const messageContent = ref("");
   const talkingChats = ref(new Set<number>([]));
 
+  const chatImgModel = ref(false); // 图片模式
+
   // talking
 
   const talking = computed(
@@ -116,6 +118,7 @@ export const useChatStore = defineStore("chat", () => {
     message.error = message.error ?? false;
     message.errorMessage = message.errorMessage ?? undefined;
     message.sendDate = Date.now();
+    message.picModel = chatImgModel.value
 
     const id = await db.message.put({ ...message });
     await getChatMessages(chatId);
@@ -123,7 +126,7 @@ export const useChatStore = defineStore("chat", () => {
     return id;
   }
 
-  async function updateMessageContent(id: number, content: string) {
+  async function updateMessageContent(id: number, content: string, pic?:boolean) {
     await db.message.update(id, { content });
     await getChatMessages((chat.value as ChatItem).id);
   }
@@ -180,57 +183,81 @@ export const useChatStore = defineStore("chat", () => {
       console.log(standardList.value);
 
       // 发送请求
-      const { status, body } = await fetch("/api/chat", {
+      const isImg = chatImgModel.value
+      const chatModel = isImg ? "img" : "chat"
+      let requestDic = {
+        model: "gpt-3.5-turbo",
+        messages: standardList.value,
+        temperature: setting.temperature,
+        stream: true,
+      }
+      if (isImg) {
+        requestDic = {
+          prompt: message.content,
+          size: "512x512"
+        }
+      }
+      const aiResponse = await fetch("/api/chat", {
         method: "post",
         body: JSON.stringify({
           cipherAPIKey: setting.apiKey,
-          model: "chat",
-          request: {
-            model: "gpt-3.5-turbo",
-            messages: standardList.value,
-            temperature: setting.temperature,
-            stream: true,
-          },
+          model: chatModel,
+          request: requestDic,
         } as ApiRequest),
         signal: controller.signal,
       });
 
       // 读取 Stream
-      let content = "";
-      const reader = body?.getReader();
-      let lastUnFinishLine = "" // 接收流数据过程中，结尾会出现不完整的问答数据，用此字段保存最后一行，在下次循环的时候拼接上去
-      while (reader) {
-        const { value } = await reader.read();
+      if (!isImg) {
+        const { status, body } = aiResponse
+        let content = "";
+        const reader = body?.getReader();
+        let lastUnFinishLine = "" // 接收流数据过程中，结尾会出现不完整的问答数据，用此字段保存最后一行，在下次循环的时候拼接上去
+        while (reader) {
+          const { value } = await reader.read();
 
-        const text = lastUnFinishLine + decoder.decode(value);
-        // console.log(text, status, lastUnFinishLine, '============')
-        lastUnFinishLine = ""
-        // 处理服务端返回的异常消息并终止读取
-        if (status !== 200) {
-          try {
-            const error = JSON.parse(text);
-            content += error.error?.message ?? error.message;
-            return await makeErrorMessage(assistantMessageId, content);  
-          } catch (error) {
-            return await makeErrorMessage(assistantMessageId, "request failed or timeout, try again please.");
+          const text = lastUnFinishLine + decoder.decode(value);
+          // console.log(text, status, lastUnFinishLine, '============')
+          lastUnFinishLine = ""
+          // 处理服务端返回的异常消息并终止读取
+          if (status !== 200) {
+            try {
+              const error = JSON.parse(text);
+              content += error.error?.message ?? error.message;
+              return await makeErrorMessage(assistantMessageId, content);  
+            } catch (error) {
+              return await makeErrorMessage(assistantMessageId, "request failed or timeout, try again please.");
+            }
+          }
+
+          // 读取正文
+          for (const line of text.split(/\r?\n/)) {
+            if (line.length === 0) continue;
+            if (line.startsWith(":")) continue;
+            if (line === "data: [DONE]") return;
+            if (text.endsWith(line) && !line.endsWith("}]}")) {
+              // 结尾会出现不完整的问答数据，用此字段保存最后一行，在下次循环的时候拼接上去
+              lastUnFinishLine = line
+            } else {
+              const data = JSON.parse(line.substring(6));
+              content += data.choices[0].delta.content ?? "";
+              await updateMessageContent(assistantMessageId, content);
+            }
           }
         }
-
-        // 读取正文
-        for (const line of text.split(/\r?\n/)) {
-          if (line.length === 0) continue;
-          if (line.startsWith(":")) continue;
-          if (line === "data: [DONE]") return;
-          if (text.endsWith(line) && !line.endsWith("}]}")) {
-            // 结尾会出现不完整的问答数据，用此字段保存最后一行，在下次循环的时候拼接上去
-            lastUnFinishLine = line
-          } else {
-            const data = JSON.parse(line.substring(6));
-            content += data.choices[0].delta.content ?? "";
-            await updateMessageContent(assistantMessageId, content);
-          }
+      } else {
+        const picText = await aiResponse.text()
+        const picO = JSON.parse(picText)
+        console.log(picText, '--', picO)
+        if (picO.data) {
+          const picItem = picO.data[0]
+          const content = `![imgae](${picItem.url})`
+          await updateMessageContent(assistantMessageId, content);
+        } else {
+          makeErrorMessage(assistantMessageId, "生成错误请重试");
         }
       }
+      
     } catch (e: any) {
       // 主动终止时触发
       await makeErrorMessage(
@@ -245,6 +272,7 @@ export const useChatStore = defineStore("chat", () => {
   return {
     showSetting,
     showHelp,
+    chatImgModel,
     chats,
     chat,
     messages,

@@ -13,6 +13,7 @@ export interface ChatMessageExOption extends ChatMessage {
   error?: boolean;
   errorMessage?: string;
   sendDate?: number;
+  picModel?: boolean;
 }
 
 export interface ChatMessage {
